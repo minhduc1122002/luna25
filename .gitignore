@@ -2,10 +2,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+dataset/
+.ipynb
 # C extensions
 *.so
-
+resources/
+results/
 # Distribution / packaging
 .Python
 build/

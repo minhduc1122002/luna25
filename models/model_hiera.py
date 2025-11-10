@@ -1,8 +1,3 @@
-# Hiera for 2D/3D image classification
-
-# References:
-# hiera: https://github.com/facebookresearch/hiera
-
 from functools import partial
 from pathlib import Path
 

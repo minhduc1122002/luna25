@@ -9,18 +9,25 @@ from pathlib import Path
 
 class Configuration(object):
     def __init__(self, kind="k-fold") -> None:
-        assert kind in ["all-data", "k-fold", "submission"], \
-            f"Invalid kind: {kind}. Must be one of ['all-data', 'k-fold', 'submission']."
+        assert kind in [
+            "all-data",
+            "k-fold",
+            "submission",
+        ], f"Invalid kind: {kind}. Must be one of ['all-data', 'k-fold', 'submission']."
         self.kind = kind
-        workspace_root = str(Path(__file__).resolve().parent.parent)
+        workspace_root = "/home/minhduc1122002"
 
         # Directories
         self.WORKDIR = Path(f"/{workspace_root}/hiera-luna25-finetuning")
         self.RESOURCES = self.WORKDIR / "resources"
         # Path to the nodule blocks folder provided for the LUNA25 training.
-        self.DATADIR = Path(f"/{workspace_root}/luna25_nodule_blocks")
+        self.DATADIR = Path(
+            f"/{workspace_root}/hiera-luna25-finetuning/dataset/luna_nodule_blocks"
+        )
         # Path to the folder containing the CSVs for training and validation.
-        self.CSV_DIR = Path(f"/{workspace_root}/data_splits")
+        self.CSV_DIR = Path(
+            f"/{workspace_root}/hiera-luna25-finetuning/dataset/data_splits"
+        )
         # Results will be saved in the results directory
         # inside a subfolder named according to the specified EXPERIMENT_NAME and MODE.
         self.EXPERIMENT_DIR = self.WORKDIR / "results"
@@ -53,7 +60,7 @@ class Configuration(object):
             "CUTMIX_ALPHA": 1.0,
             "PROB": 1.0,
             "SWITCH_PROB": 0.5,
-            "LABEL_SMOOTH_VALUE": 0.1
+            "LABEL_SMOOTH_VALUE": 0.1,
         }
 
         # Hiera
@@ -66,26 +73,26 @@ class Configuration(object):
                 "embed_dim": 96,
                 "num_heads": 1,
                 "stages": (2, 3, 16, 3),
-                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_base_16x224.pth"
+                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_base_16x224.pth",
             },
             "mae_hiera_base_plus_16x224": {
                 "embed_dim": 112,
                 "num_heads": 2,
                 "stages": (2, 3, 16, 3),
-                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_base_plus_16x224.pth"
+                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_base_plus_16x224.pth",
             },
             "mae_hiera_large_16x224": {
                 "embed_dim": 144,
                 "num_heads": 2,
                 "stages": (2, 6, 36, 4),
-                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_large_16x224.pth"
+                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_large_16x224.pth",
             },
             "mae_hiera_huge_16x224": {
                 "embed_dim": 256,
                 "num_heads": 4,
                 "stages": (2, 6, 36, 4),
-                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_huge_16x224.pth"
-            }
+                "mae_k400": "https://dl.fbaipublicfiles.com/hiera/mae_hiera_huge_16x224.pth",
+            },
         }
         self.FUSION_HEAD_ENABLED = False
         # Attemp to fix the bug (https://arxiv.org/pdf/2311.05613)
@@ -104,7 +111,7 @@ class Configuration(object):
             },
             "sam2.1_hiera_large": {
                 "checkpoint": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt"
-            }
+            },
         }
 
         # Solver
@@ -132,7 +139,9 @@ class Configuration(object):
 
         if kind == "all-data":
             self.CSV_DIR = Path(f"/{workspace_root}")
-            self.CSV_DIR_TRAIN = self.CSV_DIR / "LUNA25_Public_Training_Development_Data.csv"
+            self.CSV_DIR_TRAIN = (
+                self.CSV_DIR / "LUNA25_Public_Training_Development_Data.csv"
+            )
             self.EPOCHS = 29
 
 
