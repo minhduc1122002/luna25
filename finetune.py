@@ -32,7 +32,7 @@ from dataloader import get_data_loader
 from experiment_config import config
 from mixup import MixUpBinary
 from models.model_2d_vit import ViT2D
-from models.model_hiera import Hiera2D, Hiera3D
+from models.model_hiera import Hiera2D, Hiera3D, VideoMAESmallImageAdapter
 from optimizer import construct_optimizer, get_lr_at_epoch, set_lr
 
 torch.backends.cudnn.deterministic = True
@@ -145,16 +145,22 @@ def finetune(train_csv_path, exp_save_root, valid_csv_path=None):
 
     device = torch.device("cuda:0")
 
-    if config.MODE == "3D" and "hiera" in config.EXPERIMENT_NAME.lower():
-        model = Hiera3D(image_size=config.SIZE_PX, image_depth=config.DEPTH_PX).to(
-            device
-        )
-    elif config.MODE == "2D" and "hiera" in config.EXPERIMENT_NAME.lower():
-        model = Hiera2D(image_size=config.SIZE_PX).to(device)
-    elif config.MODE == "2D" and "vit" in config.EXPERIMENT_NAME.lower():
-        model = ViT2D(image_size=config.SIZE_PX).to(device)
-    else:
-        raise ValueError("Invalid MODE and/or EXPERIMENT_NAME.")
+    # if config.MODE == "3D" and "hiera" in config.EXPERIMENT_NAME.lower():
+    #     model = Hiera3D(image_size=config.SIZE_PX, image_depth=config.DEPTH_PX).to(
+    #         device
+    #     )
+    # elif config.MODE == "2D" and "hiera" in config.EXPERIMENT_NAME.lower():
+    #     model = Hiera2D(image_size=config.SIZE_PX).to(device)
+    # elif config.MODE == "2D" and "vit" in config.EXPERIMENT_NAME.lower():
+    #     model = ViT2D(image_size=config.SIZE_PX).to(device)
+    # else:
+    #     raise ValueError("Invalid MODE and/or EXPERIMENT_NAME.")
+    # model = Hiera3D(image_size=config.SIZE_PX, image_depth=config.DEPTH_PX).to(device)
+    model = VideoMAESmallImageAdapter(
+        model_name="MCG-NJU/videomae-large-finetuned-kinetics",
+        new_image_size=64,
+        num_classes=1,
+    ).to(device)
 
     logging.info("Number of parameters: %s", sum(p.numel() for p in model.parameters()))
     for name, param in model.named_parameters():
@@ -165,9 +171,7 @@ def finetune(train_csv_path, exp_save_root, valid_csv_path=None):
 
     loss_function = torch.nn.BCEWithLogitsLoss()
     optimizer = optimizer = (
-        construct_optimizer(model.hiera)
-        if "hiera" in config.EXPERIMENT_NAME.lower()
-        else construct_optimizer(model)
+        construct_optimizer(model)
     )
     if config.MIXUP["ENABLE"]:
         mixup_fn = MixUpBinary(
@@ -209,7 +213,6 @@ def finetune(train_csv_path, exp_save_root, valid_csv_path=None):
             if config.MIXUP["ENABLE"]:
                 inputs, labels = mixup_fn(inputs, labels)
             inputs = inputs.to(device)
-            # print(inputs.shape)
             outputs = model(inputs)
             loss = loss_function(outputs.squeeze(), labels.squeeze())
 
