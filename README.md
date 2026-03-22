@@ -1,4 +1,4 @@
-# Finetuning Hiera on LUNA25 3D Patches
+# Finetuning Hiera/VideoMAE/VJEPA2 on LUNA25 3D Patches
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/)
 [![Code License](https://img.shields.io/badge/code_license-Apache_2.0-olive)](https://opensource.org/licenses/Apache-2.0)
@@ -8,11 +8,9 @@ This work, participating in the [LUNA25 Challenge](https://luna25.grand-challeng
 ## Usage
 ### Set Up
 ```
-git clone https://github.com/Zhengro/hiera-luna25-finetuning.git
-
-conda create -y -n venv2025 python==3.9
+conda create -y -n venv2025 python==3.11
 conda activate venv2025
-python -m pip install -r hiera-luna25-finetuning/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### Get Data
@@ -28,20 +26,51 @@ rm luna25_nodule_blocks.zip.001 luna25_nodule_blocks.zip.002
 ```
 
 ### Perform Training
-Before starting the training, ensure that the correct `experiment_config.py` is in the project root directory.
 
-By default, `experiment_config.py` is a copy of `configs/experiment_config_3d_hiera.py`, which represents the submitted version for the LUNA25 Challenge. To train 2D models, copy one of the available config files:
 ```
-cp hiera-luna25-finetuning/configs/experiment_config_XXX.py hiera-luna25-finetuning/experiment_config.py
-```
-When training using k-fold cross validation, set `kind="k-fold"` in `experiment_config.py` then run
-```
-python hiera-luna25-finetuning/split_data.py
-python hiera-luna25-finetuning/finetune.py --k_fold
+python split_data.py
+python finetune.py --k_fold
 ```
 When training using all data, set `kind="all-data"` in `experiment_config.py` then run
 ```
-python hiera-luna25-finetuning/finetune.py --all_data
+python finetune.py --all_data
+```
+
+After training the checkpoints will be saved in results folder
+
+To run Ensemble do, Remember to change file path:
+```
+do_ensemble.sh
+```
+### Inference with Real Data
+
+1. Preparing the test data:
+- Assume that you have the input in the DICOM format file. Add it in 'data' folder like this:
+```
+data
+  |- metadata (luna data)
+  |- HA251209.177_CT (real data)
+	|- 3-1.25mm NHU MO PHOI
+	|- 4-1.25mm Trung That
+```
+- Run data preprocessing. This will create the .mha image file and .json metadata file in the 'test' folder. :
+```bash
+python MedSAM2/data_preprocessing.py
+```
+- Make sure that you have unique seriesInstanceUID in DICOM files in each folder. If you have the same seriesInstanceUID in multiple folders, our code will only keep one. For example, our folders  '123.255088989375905.1851013063013701 (3)' and '123.255088989375905.1851013063013701 (4)' in 'data' have the same seriesInstanceUID, meaning that they are duplicated. So our code will remove duplication. So if you receive predictions that do not match with your number of testcase, please check your seriesInstanceUID
+
+2. **Configure the inference script**
+
+Open the `inference_real.py` script and configure:
+- `INPUT_PATH`: Path to the input data (CT, nodule locations and clinical information). Keep as `Path("./test/input")` for Grand-Challenge.
+- `RESOUCE_PATH`: Path to resources (e.g., pretrained models weights) in the container. Defaults to `./results` directory (see Dockerfile)
+- `OUTPUT_PATH`: Path to store the output in your local directory. Keep as `Path("./test/output")` for Grand-Challenge.
+- **Inputs for the `run()` function**:
+    - `mode`: Match this to the mode used during training (2D or 3D).
+    - `model_name`: Specify the experiment_name matching the training configuration (corresponding to experiment_name directory that contains the model weights in `/results`). You can install our checkpoint [here](https://drive.google.com/drive/folders/13S_gRJN9q8vOd4HQPPdhOs5Y0XftmhqH?usp=sharing).
+- Run inference:
+```bash
+python inference_real.py
 ```
 
 ## License
